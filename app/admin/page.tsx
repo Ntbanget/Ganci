@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [namaPelanggan, setNamaPelanggan] = useState('');
   const [foto, setFoto] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
+  const [mindFile, setMindFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -24,8 +25,8 @@ export default function AdminPage() {
     setSuccess(false);
 
     try {
-      if (!foto || !video) {
-        throw new Error('Foto dan video wajib diupload');
+      if (!foto || !video || !mindFile) {
+        throw new Error('Foto, video, dan file .mind wajib diupload');
       }
 
       // Check video duration (max 30 seconds)
@@ -38,17 +39,15 @@ export default function AdminPage() {
       const slug = generateSlug();
 
       // Upload files to Supabase Storage
-      const fotoUrl = await uploadFile(foto, `orders/${slug}-foto.jpg`);
+      const fotoPreviewUrl = await uploadFile(foto, `orders/${slug}-foto.jpg`);
       const videoUrl = await uploadFile(video, `orders/${slug}-video.mp4`);
-
-      // For now, skip .mind compilation (will be implemented separately)
-      // Use placeholder for marker_url
-      const markerUrl = fotoUrl; // TODO: Replace with actual .mind file after compilation
+      const markerUrl = await uploadFile(mindFile, `orders/${slug}.mind`);
 
       // Save to Supabase
       const { error: insertError } = await supabase.from('orders').insert({
         id: slug,
         nama_pelanggan: namaPelanggan || null,
+        foto_preview_url: fotoPreviewUrl,
         marker_url: markerUrl,
         video_url: videoUrl,
         status: 'dipesan',
@@ -60,6 +59,7 @@ export default function AdminPage() {
       setNamaPelanggan('');
       setFoto(null);
       setVideo(null);
+      setMindFile(null);
 
       // Generate QR code for the slug
       const qrDataUrl = await QRCode.toDataURL(`${window.location.origin}/${slug}`);
@@ -188,6 +188,17 @@ export default function AdminPage() {
             />
           </div>
 
+          <div>
+            <label className="block mb-2">File .mind (Marker AR - hasil compile dari MindAR)</label>
+            <input
+              type="file"
+              accept=".mind"
+              onChange={(e) => setMindFile(e.target.files?.[0] || null)}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -213,6 +224,7 @@ export default function AdminPage() {
               <table className="min-w-full bg-white border">
                 <thead>
                   <tr>
+                    <th className="border px-4 py-2">Preview</th>
                     <th className="border px-4 py-2">ID/Slug</th>
                     <th className="border px-4 py-2">Nama Pelanggan</th>
                     <th className="border px-4 py-2">Status</th>
@@ -222,6 +234,15 @@ export default function AdminPage() {
                 <tbody>
                   {orders.map((order) => (
                     <tr key={order.id}>
+                      <td className="border px-4 py-2">
+                        {order.foto_preview_url && (
+                          <img 
+                            src={order.foto_preview_url} 
+                            alt="Preview" 
+                            className="w-16 h-16 object-cover"
+                          />
+                        )}
+                      </td>
                       <td className="border px-4 py-2">{order.id}</td>
                       <td className="border px-4 py-2">{order.nama_pelanggan || '-'}</td>
                       <td className="border px-4 py-2">{order.status}</td>
