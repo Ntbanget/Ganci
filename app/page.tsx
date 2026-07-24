@@ -19,42 +19,42 @@ export default function Home() {
     setIsLoadingScripts(true);
 
     // Load Three.js dulu (dependency MindAR)
-    // Gunakan versi r132 yang kompatibel dengan MindAR 1.2.2
+    // Load dari lokal untuk menghindari masalah CDN
     const threeScript = document.createElement('script');
-    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js';
+    threeScript.src = '/three.min.js';
     threeScript.async = true;
     threeScript.onload = () => {
       console.log('✓ Three.js loaded successfully');
       
       // Setelah Three.js load, baru load MindAR
-      // Coba CDN unpkg yang lebih stabil
+      // Load dari lokal untuk menghindari masalah CDN
       const mindarScript = document.createElement('script');
-      mindarScript.src = 'https://unpkg.com/mind-ar@1.2.2/dist/mindar-image-three.js';
+      mindarScript.src = '/mindar-image-three.js';
       mindarScript.async = true;
       mindarScript.onload = () => {
         console.log('✓ MindAR loaded successfully');
-        // @ts-ignore - MindAR dimuat dari CDN
+        // @ts-ignore - MindAR dimuat dari lokal
         console.log('Checking if MINDAR is available:', typeof window.MINDAR);
         setIsMindARLoaded(true);
         setIsLoadingScripts(false);
       };
       mindarScript.onerror = () => {
         console.error('✗ Failed to load MindAR');
-        setError('Gagal memuat MindAR. Pastikan koneksi internet aktif.');
+        setError('Gagal memuat MindAR. Pastikan file tersedia.');
         setIsLoadingScripts(false);
       };
       document.body.appendChild(mindarScript);
     };
     threeScript.onerror = () => {
       console.error('✗ Failed to load Three.js');
-      setError('Gagal memuat Three.js. Pastikan koneksi internet aktif.');
+      setError('Gagal memuat Three.js. Pastikan file tersedia.');
       setIsLoadingScripts(false);
     };
     document.body.appendChild(threeScript);
 
     return () => {
       // Cleanup scripts
-      const scripts = document.querySelectorAll('script[src*="three"], script[src*="mind-ar"]');
+      const scripts = document.querySelectorAll('script[src*="three"], script[src*="mindar"]');
       scripts.forEach(script => script.remove());
     };
   }, []);
