@@ -56,9 +56,22 @@ export default function ScanPage() {
 
         const mindarThree = new MindARThree({
           container: document.querySelector("#ar-container"),
-          imageTargetSrc: "${order.marker_url}"
+          imageTargetSrc: "${order.marker_url}",
+          uiScanning: "no",
+          filterMinCF: 0.0001,
+          filterBeta: 0.001
         });
         const {renderer, scene, camera} = mindarThree;
+
+        // Configure camera for HD resolution
+        camera.fov = 45;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        // Configure renderer
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
         const anchor = mindarThree.addAnchor(0);
 
         const video = document.createElement('video');
@@ -74,14 +87,18 @@ export default function ScanPage() {
         anchor.group.add(plane);
 
         anchor.onTargetFound = () => {
+          console.log('Target found, playing video');
           video.play();
         };
 
         anchor.onTargetLost = () => {
+          console.log('Target lost, pausing video');
           video.pause();
         };
 
         const start = async () => {
+          console.log('Starting MindAR with marker:', "${order.marker_url}");
+          console.log('Video URL:', "${order.video_url}");
           await mindarThree.start();
           renderer.setAnimationLoop(() => {
             renderer.render(scene, camera);
