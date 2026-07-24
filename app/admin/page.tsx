@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import QRCode from 'qrcode';
+import * as QRCode from 'qrcode';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
