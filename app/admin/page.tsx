@@ -95,6 +95,7 @@ export default function AdminPage() {
     if (error) throw error;
     
     const { data: { publicUrl } } = supabase.storage.from('orders').getPublicUrl(path);
+    console.log('Public URL for', path, ':', publicUrl);
     return publicUrl;
   };
 
