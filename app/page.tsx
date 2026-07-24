@@ -8,9 +8,9 @@ export default function Home() {
   const [showFallback, setShowFallback] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Placeholder URL - ganti dengan file asli nanti
-  const MARKER_URL = '/assets/marker.mind'; // File marker MindAR
-  const VIDEO_URL = '/assets/video.mp4';   // File video test
+  // URL file test yang sudah ada
+  const MARKER_URL = '/assets/targets.mind'; // File marker MindAR
+  const VIDEO_URL = '/assets/ssstik.io_@syaahagordl_1784859582793.mp4';   // File video test
 
   useEffect(() => {
     // Load MindAR dari CDN
