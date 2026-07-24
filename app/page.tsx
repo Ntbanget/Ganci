@@ -26,24 +26,23 @@ export default function Home() {
     threeScript.onload = () => {
       console.log('✓ Three.js loaded successfully');
       
-      // Setelah Three.js load, baru load MindAR
-      // Load dari lokal untuk menghindari masalah CDN
-      const mindarScript = document.createElement('script');
-      mindarScript.src = '/mindar-image-three.js';
-      mindarScript.async = true;
-      mindarScript.onload = () => {
+      // Setelah Three.js load, baru load MindAR menggunakan dynamic import
+      // MindAR menggunakan ES6 module exports
+      import('/mindar-image-three.js').then((mindarModule) => {
         console.log('✓ MindAR loaded successfully');
-        // @ts-ignore - MindAR dimuat dari lokal
+        console.log('MindAR module:', mindarModule);
+        
+        // MindAR exports MINDAR namespace
+        // @ts-ignore - MindAR dimuat sebagai module
+        window.MINDAR = mindarModule.default || mindarModule;
         console.log('Checking if MINDAR is available:', typeof window.MINDAR);
         setIsMindARLoaded(true);
         setIsLoadingScripts(false);
-      };
-      mindarScript.onerror = () => {
-        console.error('✗ Failed to load MindAR');
+      }).catch((err) => {
+        console.error('✗ Failed to load MindAR:', err);
         setError('Gagal memuat MindAR. Pastikan file tersedia.');
         setIsLoadingScripts(false);
-      };
-      document.body.appendChild(mindarScript);
+      });
     };
     threeScript.onerror = () => {
       console.error('✗ Failed to load Three.js');
