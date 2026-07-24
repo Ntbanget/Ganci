@@ -19,8 +19,9 @@ export default function Home() {
     setIsLoadingScripts(true);
 
     // Load Three.js dulu (dependency MindAR)
+    // Gunakan versi r132 yang kompatibel dengan MindAR 1.2.2
     const threeScript = document.createElement('script');
-    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js';
     threeScript.async = true;
     threeScript.onload = () => {
       console.log('✓ Three.js loaded successfully');
