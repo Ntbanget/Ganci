@@ -26,8 +26,9 @@ export default function Home() {
       console.log('✓ Three.js loaded successfully');
       
       // Setelah Three.js load, baru load MindAR
+      // Gunakan versi non-UMD yang lebih kompatibel
       const mindarScript = document.createElement('script');
-      mindarScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+      mindarScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.js';
       mindarScript.async = true;
       mindarScript.onload = () => {
         console.log('✓ MindAR loaded successfully');
