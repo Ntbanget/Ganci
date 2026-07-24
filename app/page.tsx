@@ -13,20 +13,34 @@ export default function Home() {
   const VIDEO_URL = '/assets/ssstik.io_@syaahagordl_1784859582793.mp4';   // File video test
 
   useEffect(() => {
-    // Load MindAR dari CDN
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('MindAR loaded');
+    // Load Three.js dulu (dependency MindAR)
+    const threeScript = document.createElement('script');
+    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    threeScript.async = true;
+    threeScript.onload = () => {
+      console.log('Three.js loaded');
+      
+      // Setelah Three.js load, baru load MindAR
+      const mindarScript = document.createElement('script');
+      mindarScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+      mindarScript.async = true;
+      mindarScript.onload = () => {
+        console.log('MindAR loaded');
+      };
+      mindarScript.onerror = () => {
+        setError('Gagal memuat MindAR. Pastikan koneksi internet aktif.');
+      };
+      document.body.appendChild(mindarScript);
     };
-    script.onerror = () => {
-      setError('Gagal memuat MindAR. Pastikan koneksi internet aktif.');
+    threeScript.onerror = () => {
+      setError('Gagal memuat Three.js. Pastikan koneksi internet aktif.');
     };
-    document.body.appendChild(script);
+    document.body.appendChild(threeScript);
 
     return () => {
-      document.body.removeChild(script);
+      // Cleanup scripts
+      const scripts = document.querySelectorAll('script[src*="three"], script[src*="mind-ar"]');
+      scripts.forEach(script => script.remove());
     };
   }, []);
 
