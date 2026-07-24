@@ -7,33 +7,46 @@ export default function Home() {
   const [isARStarted, setIsARStarted] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMindARLoaded, setIsMindARLoaded] = useState(false);
+  const [isLoadingScripts, setIsLoadingScripts] = useState(true);
 
   // URL file test yang sudah ada
   const MARKER_URL = '/assets/targets.mind'; // File marker MindAR
   const VIDEO_URL = '/assets/ssstik.io_@syaahagordl_1784859582793.mp4';   // File video test
 
   useEffect(() => {
+    console.log('Starting to load scripts...');
+    setIsLoadingScripts(true);
+
     // Load Three.js dulu (dependency MindAR)
     const threeScript = document.createElement('script');
     threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     threeScript.async = true;
     threeScript.onload = () => {
-      console.log('Three.js loaded');
+      console.log('✓ Three.js loaded successfully');
       
       // Setelah Three.js load, baru load MindAR
       const mindarScript = document.createElement('script');
       mindarScript.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
       mindarScript.async = true;
       mindarScript.onload = () => {
-        console.log('MindAR loaded');
+        console.log('✓ MindAR loaded successfully');
+        // @ts-ignore - MindAR dimuat dari CDN
+        console.log('Checking if MINDAR is available:', typeof window.MINDAR);
+        setIsMindARLoaded(true);
+        setIsLoadingScripts(false);
       };
       mindarScript.onerror = () => {
+        console.error('✗ Failed to load MindAR');
         setError('Gagal memuat MindAR. Pastikan koneksi internet aktif.');
+        setIsLoadingScripts(false);
       };
       document.body.appendChild(mindarScript);
     };
     threeScript.onerror = () => {
+      console.error('✗ Failed to load Three.js');
       setError('Gagal memuat Three.js. Pastikan koneksi internet aktif.');
+      setIsLoadingScripts(false);
     };
     document.body.appendChild(threeScript);
 
@@ -45,12 +58,22 @@ export default function Home() {
   }, []);
 
   const startAR = async () => {
+    console.log('🔘 Button clicked: Starting AR...');
+    
+    if (!isMindARLoaded) {
+      console.error('✗ MindAR not loaded yet');
+      setError('MindAR belum selesai dimuat. Tunggu sebentar lalu coba lagi.');
+      return;
+    }
+
     try {
+      console.log('📷 Initializing MindAR...');
       // @ts-ignore - MindAR dimuat dari CDN
       const mindarThree = new window.MINDAR.IMAGE.MindARThree({
         container: document.querySelector('#ar-container') as HTMLElement,
         imageTargetSrc: MARKER_URL,
       });
+      console.log('✓ MindAR initialized');
 
       // Konfigurasi kualitas kamera sesuai README
       // @ts-ignore
@@ -61,10 +84,12 @@ export default function Home() {
         // Hindari crop otomatis yang terlihat seperti zoom
         facingMode: 'environment',
       };
+      console.log('✓ Camera configured: 1280x720 HD');
 
       const { renderer, scene, camera } = mindarThree;
 
       // Setup video element untuk AR overlay
+      console.log('🎬 Setting up video element...');
       const video = document.createElement('video');
       video.src = VIDEO_URL;
       video.loop = true;
@@ -76,6 +101,7 @@ export default function Home() {
       video.style.objectFit = 'contain';
       video.style.width = '100%';
       video.style.height = '100%';
+      console.log('✓ Video element created');
 
       // Setup texture dari video
       // @ts-ignore
@@ -89,35 +115,43 @@ export default function Home() {
       });
       // @ts-ignore
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      console.log('✓ 3D plane created with video texture');
 
       // @ts-ignore
       const anchor = mindarThree.addAnchor(0);
       anchor.group.add(plane);
+      console.log('✓ Anchor added to scene');
 
       // Parameter smoothing MindAR untuk hindari jitter
       // @ts-ignore
       mindarThree.filterMinCF = 0.0001;
       // @ts-ignore
       mindarThree.filterBeta = 0.001;
+      console.log('✓ Smoothing parameters set');
 
+      console.log('🚀 Starting MindAR (requesting camera permission)...');
       await mindarThree.start();
+      console.log('✓ MindAR started successfully - camera should be active');
       setIsARStarted(true);
 
       // Play video saat marker terdeteksi
       anchor.onTargetFound = () => {
+        console.log('🎯 Marker detected! Playing video');
         video.play();
       };
 
       anchor.onTargetLost = () => {
+        console.log('❌ Marker lost - pausing video');
         video.pause();
       };
 
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
       });
+      console.log('✓ Animation loop started');
 
     } catch (err) {
-      console.error('AR Error:', err);
+      console.error('✗ AR Error:', err);
       setError('Gagal memulai AR. Pastikan browser mendukung WebGL dan kamera dapat diakses.');
       setShowFallback(true);
     }
@@ -141,15 +175,29 @@ export default function Home() {
 
         {!isARStarted && !showFallback && (
           <div className="text-center">
-            <button
-              onClick={startAR}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors"
-            >
-              Mulai Scan AR
-            </button>
-            <p className="mt-4 text-sm text-gray-600">
-              Pastikan izinkan akses kamera saat diminta
-            </p>
+            {isLoadingScripts ? (
+              <div className="text-gray-600">
+                <p className="text-lg">Memuat MindAR...</p>
+                <p className="text-sm mt-2">Mohon tunggu sebentar</p>
+              </div>
+            ) : !isMindARLoaded ? (
+              <div className="text-red-600">
+                <p className="text-lg">Gagal memuat MindAR</p>
+                <p className="text-sm mt-2">Coba refresh halaman</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={startAR}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors"
+                >
+                  Mulai Scan AR
+                </button>
+                <p className="mt-4 text-sm text-gray-600">
+                  Pastikan izinkan akses kamera saat diminta
+                </p>
+              </>
+            )}
           </div>
         )}
 
