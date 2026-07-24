@@ -14,18 +14,15 @@ export default function ScanPage() {
     const fetchOrder = async () => {
       try {
         const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', params.slug)
-          .single();
+          .rpc('get_order_by_slug', { p_slug: params.slug });
 
-        if (error || !data) {
+        if (error || !data || data.length === 0) {
           setError('Order tidak ditemukan');
           setLoading(false);
           return;
         }
 
-        setOrder(data);
+        setOrder(data[0]);
         setLoading(false);
       } catch (err) {
         setError('Gagal memuat data');
