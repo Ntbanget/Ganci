@@ -30,15 +30,25 @@
     video.loop = true;
     video.muted = false;
     video.playsInline = true;
+    video.pause(); // Pastikan video diam sejak awal
     const videoTexture = new THREE.VideoTexture(video);
     const geometry = new THREE.PlaneGeometry(1, 1.4);
     const material = new THREE.MeshBasicMaterial({ map: videoTexture });
     const plane = new THREE.Mesh(geometry, material);
     anchor.group.add(plane);
 
+    // Play video hanya saat marker terdeteksi
+    anchor.onTargetFound = () => {
+      video.play();
+    };
+
+    // Pause video saat marker hilang
+    anchor.onTargetLost = () => {
+      video.pause();
+    };
+
     const start = async () => {
       await mindarThree.start();
-      video.play();
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
       });
