@@ -73,24 +73,48 @@ export default function ScanPage() {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         const anchor = mindarThree.addAnchor(0);
+        
+        // Set anchor positioning to center on marker
+        anchor.onTargetFound = () => {
+          console.log('Target found, setting anchor position');
+          anchor.group.position.set(0, 0, 0);
+        };
 
         const video = document.createElement('video');
         video.src = "${order.video_url}";
         video.loop = true;
         video.muted = false;
         video.playsInline = true;
+        video.crossOrigin = "anonymous";
         video.pause();
-        const videoTexture = new THREE.VideoTexture(video);
-        const geometry = new THREE.PlaneGeometry(1, 1.4);
-        const material = new THREE.MeshBasicMaterial({ map: videoTexture });
-        const plane = new THREE.Mesh(geometry, material);
-        anchor.group.add(plane);
 
+        // Wait for video metadata to load before creating texture
+        video.addEventListener('loadedmetadata', () => {
+          console.log('Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+          const videoTexture = new THREE.VideoTexture(video);
+          videoTexture.colorSpace = THREE.SRGBColorSpace;
+          
+          // Adjust plane geometry to match video aspect ratio
+          const videoAspect = video.videoWidth / video.videoHeight;
+          const geometry = new THREE.PlaneGeometry(1, 1 / videoAspect);
+          const material = new THREE.MeshBasicMaterial({ map: videoTexture });
+          const plane = new THREE.Mesh(geometry, material);
+          anchor.group.add(plane);
+        });
+
+        // Handle video load error
+        video.addEventListener('error', (e) => {
+          console.error('Video load error:', e);
+        });
+
+        // Play video when target found
         anchor.onTargetFound = () => {
-          console.log('Target found, playing video');
+          console.log('Target found, setting anchor position and playing video');
+          anchor.group.position.set(0, 0, 0);
           video.play();
         };
 
+        // Pause video when target lost
         anchor.onTargetLost = () => {
           console.log('Target lost, pausing video');
           video.pause();

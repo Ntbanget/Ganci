@@ -229,6 +229,7 @@ export default function AdminPage() {
                     <th className="border px-4 py-2">ID/Slug</th>
                     <th className="border px-4 py-2">Nama Pelanggan</th>
                     <th className="border px-4 py-2">Status</th>
+                    <th className="border px-4 py-2">Link AR</th>
                     <th className="border px-4 py-2">Created At</th>
                   </tr>
                 </thead>
@@ -247,6 +248,16 @@ export default function AdminPage() {
                       <td className="border px-4 py-2">{order.id}</td>
                       <td className="border px-4 py-2">{order.nama_pelanggan || '-'}</td>
                       <td className="border px-4 py-2">{order.status}</td>
+                      <td className="border px-4 py-2">
+                        <a 
+                          href={`/${order.id}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          /{order.id}
+                        </a>
+                      </td>
                       <td className="border px-4 py-2">{new Date(order.created_at).toLocaleString()}</td>
                     </tr>
                   ))}
