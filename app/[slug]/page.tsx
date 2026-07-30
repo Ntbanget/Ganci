@@ -155,8 +155,19 @@ export default function ScanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-100">
-      <div id="ar-container" style={{ width: '100vw', height: '100vh' }} />
+    <div className="min-h-screen bg-cream-100" style={{ margin: 0, padding: 0, overflow: 'hidden', width: '100vw', height: '100vh' }}>
+      <div 
+        id="ar-container" 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'absolute', 
+          top: 0, 
+          left: 0,
+          margin: 0,
+          padding: 0
+        }} 
+      />
     </div>
   );
 }
