@@ -37,6 +37,13 @@ export default function ScanPage() {
     if (!order) return;
 
     const loadMindAR = async () => {
+      // Reset body styles for fullscreen
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.overflow = 'hidden';
+      document.body.style.width = '100vw';
+      document.body.style.height = '100vh';
+
       const importmap = document.createElement('script');
       importmap.type = 'importmap';
       importmap.textContent = JSON.stringify({
@@ -54,8 +61,14 @@ export default function ScanPage() {
         import * as THREE from 'three';
         import { MindARThree } from 'mindar-image-three';
 
+        const container = document.querySelector("#ar-container");
+        if (!container) {
+          console.error('AR container not found');
+          return;
+        }
+
         const mindarThree = new MindARThree({
-          container: document.querySelector("#ar-container"),
+          container: container,
           imageTargetSrc: "${order.marker_url}",
           uiScanning: "no",
           filterMinCF: 0.0001,
@@ -68,17 +81,20 @@ export default function ScanPage() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
 
-        // Configure renderer
+        // Configure renderer for fullscreen
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+        // Force canvas to be fullscreen
+        renderer.domElement.style.position = 'fixed';
+        renderer.domElement.style.top = '0';
+        renderer.domElement.style.left = '0';
+        renderer.domElement.style.width = '100vw';
+        renderer.domElement.style.height = '100vh';
+        renderer.domElement.style.margin = '0';
+        renderer.domElement.style.padding = '0';
+
         const anchor = mindarThree.addAnchor(0);
-        
-        // Set anchor positioning to center on marker
-        anchor.onTargetFound = () => {
-          console.log('Target found, setting anchor position');
-          anchor.group.position.set(0, 0, 0);
-        };
 
         const video = document.createElement('video');
         video.src = "${order.video_url}";
@@ -87,6 +103,7 @@ export default function ScanPage() {
         video.playsInline = true;
         video.crossOrigin = "anonymous";
         video.pause();
+        video.style.display = 'none';
 
         // Wait for video metadata to load before creating texture
         video.addEventListener('loadedmetadata', () => {
@@ -107,7 +124,7 @@ export default function ScanPage() {
           console.error('Video load error:', e);
         });
 
-        // Play video when target found
+        // Play video ONLY when target found
         anchor.onTargetFound = () => {
           console.log('Target found, setting anchor position and playing video');
           anchor.group.position.set(0, 0, 0);
@@ -120,9 +137,17 @@ export default function ScanPage() {
           video.pause();
         };
 
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
         const start = async () => {
           console.log('Starting MindAR with marker:', "${order.marker_url}");
           console.log('Video URL:', "${order.video_url}");
+          console.log('Video paused:', video.paused);
           await mindarThree.start();
           renderer.setAnimationLoop(() => {
             renderer.render(scene, camera);
@@ -155,19 +180,18 @@ export default function ScanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-100" style={{ margin: 0, padding: 0, overflow: 'hidden', width: '100vw', height: '100vh' }}>
-      <div 
-        id="ar-container" 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          position: 'absolute', 
-          top: 0, 
-          left: 0,
-          margin: 0,
-          padding: 0
-        }} 
-      />
-    </div>
+    <div 
+      id="ar-container" 
+      style={{ 
+        width: '100vw', 
+        height: '100vh', 
+        position: 'fixed', 
+        top: 0, 
+        left: 0,
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden'
+      }} 
+    />
   );
 }
